@@ -43,3 +43,9 @@ buildNumber.properties
 .classpath
 
 .settings
+
+.env
+
+.DS_Store
+
+history.txt

@@ -30,7 +30,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>unipd.ddkk.gui.Main</mainClass>
+                    <mainClass>unipd.ddkk.Main</mainClass>
                 </configuration>
             </plugin>
 
