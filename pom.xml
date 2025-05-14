@@ -12,6 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
         <javafx.version>21.0.7</javafx.version>
+        <jacksonDatabind.version>2.19.0</jacksonDatabind.version>
     </properties>
 
     <dependencies>
@@ -20,7 +21,13 @@
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jacksonDatabind.version}</version>
+        </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
