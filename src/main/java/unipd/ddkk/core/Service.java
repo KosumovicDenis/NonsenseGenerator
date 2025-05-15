@@ -23,7 +23,13 @@ public class Service {
         SentenceStructure inputSentenceStructure = apiCaller.getStructure(input);
         ArrayList<GeneratedSentence> result = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            String content = generator.generatePhrase(inputSentenceStructure);
+            String content = "";
+            int attempts = 0;
+            int maxAttempts = 10;
+            do {
+                content = generator.generatePhrase(inputSentenceStructure);
+                attempts++;
+            } while (!apiCaller.isValid(content) && attempts < maxAttempts);
             result.add(new GeneratedSentence(content));
         }
         hist.push(result);

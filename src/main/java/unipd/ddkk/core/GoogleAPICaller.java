@@ -1,29 +1,140 @@
 package unipd.ddkk.core;
 
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URI;
+import java.util.*;
 
 public class GoogleAPICaller implements APICaller {
 
+    private final String apiKey;
+
     public GoogleAPICaller() {
+        String key = "";
         try {
             Map<String, String> config = EnvLoader.loadEnv(".env");
-            System.out.println("Key: " + config.get("API_KEY"));
-            System.out.println("Access token: " + config.get("API_ACCESS_TOKEN"));
+            key = config.get("API_KEY");
+            if (key == null || key.isEmpty()) {
+                throw new RuntimeException("API_KEY not found in .env file.");
+            }
         } catch (EnvFileNotFoundException e) {
             System.out.println("[ERROR] " + e.getMessage());
         }
+        this.apiKey = key;
     }
 
     @Override
     public SentenceStructure getStructure(String sentence) {
-        return new SentenceStructure(
-                new String[] { "John", "Mary" },
-                new String[] { "walks", "runs" },
-                new String[] { "fast", "slow" });
+        try {
+            URL url = URI.create("https://language.googleapis.com/v1/documents:analyzeSyntax?key=" + apiKey).toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            String jsonInput = String.format("""
+                {
+                "document": {
+                "type": "PLAIN_TEXT",
+                "content": "%s"
+                },
+                "encodingType": "UTF8"
+                }
+                """, sentence.replace("\"", "\\\""));
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonInput.getBytes());
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(conn.getInputStream());
+            JsonNode tokens = root.get("tokens");
+
+            List<String> nouns = new ArrayList<>();
+            List<String> verbs = new ArrayList<>();
+            List<String> adjectives = new ArrayList<>();
+
+            for (JsonNode token : tokens) {
+                String text = token.get("text").get("content").asText();
+                String tag = token.get("partOfSpeech").get("tag").asText();
+
+                switch (tag) {
+                    case "NOUN", "PROPN" -> nouns.add(text);
+                    case "VERB" -> verbs.add(text);
+                    case "ADJ" -> adjectives.add(text);
+                }
+            }
+
+            return new SentenceStructure(
+                nouns.toArray(new String[0]),
+                verbs.toArray(new String[0]),
+                adjectives.toArray(new String[0])
+            );
+
+        } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
+            return new SentenceStructure(new String[0], new String[0], new String[0]);
+        }
     }
 
     @Override
     public boolean isValid(String input) {
-        return input != null && !input.trim().isEmpty();
+        if (input == null || input.trim().isEmpty()) {
+            return false;
+        }
+        return isContentSafe(input);
     }
+
+    private boolean isContentSafe(String sentence) {
+        try {
+            URL url = URI.create("https://language.googleapis.com/v1/documents:moderateText?key=" + apiKey).toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            String jsonInput = String.format("""
+                {
+                "document": {
+                "type": "PLAIN_TEXT",
+                "content": "%s"
+                }
+                }
+                """, sentence.replace("\"", "\\\""));
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonInput.getBytes());
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode >= 400) {
+                System.out.println("[ERROR] ModerateText API returned code: " + responseCode);
+                return false; // Meglio bloccare in caso di errore
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(conn.getInputStream());
+            JsonNode moderationCategories = root.get("moderationCategories");
+
+            for (JsonNode category : moderationCategories) {
+                float confidence = category.get("confidence").floatValue();
+                if (confidence > 0.5) {
+                    String name = category.get("name").asText();
+                    System.out.printf("[MODERATION] Detected category: %s (%.2f)\n", name, confidence);
+                    return false;
+                }
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            System.out.println("[ERROR] ModerateText check failed: " + e.getMessage());
+            return false;
+        }
+    }
+
 }
+

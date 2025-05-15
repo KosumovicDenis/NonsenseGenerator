@@ -11,11 +11,15 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.concurrent.Task;
 import unipd.ddkk.core.*;
 
 public class MainGUI extends Application {
     private final TextArea renderArea = new TextArea();
     private final TextArea historyArea = new TextArea();
+    private final ProgressIndicator loadingIndicator = new ProgressIndicator();
+    private Button submitButton;
+
     Controller controller;
 
     @Override
@@ -27,11 +31,14 @@ public class MainGUI extends Application {
         inputField.setPromptText("Enter your text");
         HBox.setHgrow(inputField, Priority.ALWAYS);
 
-        Button submitButton = new Button("Submit");
+        submitButton = new Button("Submit");
         Spinner<Integer> spinner = new Spinner<>(1, 100, 1);
         spinner.setPrefWidth(70);
 
-        HBox inputBox = new HBox(10, inputField, submitButton, spinner);
+        loadingIndicator.setVisible(false);
+        loadingIndicator.setPrefSize(30, 30);
+
+        HBox inputBox = new HBox(10, inputField, submitButton, spinner, loadingIndicator);
         inputBox.setAlignment(Pos.CENTER_LEFT);
 
         CheckBox treeCheckBox = new CheckBox("Get syntactic tree");
@@ -91,7 +98,8 @@ public class MainGUI extends Application {
         submitButton.setOnAction(
                 e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue()));
         inputField.setOnAction(
-                e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue()));
+            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue()));
+
 
         Scene scene = new Scene(root, 500, 300);
         stage.setScene(scene);
@@ -103,7 +111,31 @@ public class MainGUI extends Application {
 
     private void handleSubmission(String input, boolean tree, int count) {
         renderArea.clear();
-        displayGenerated(controller.generate(input, count));
+        loadingIndicator.setVisible(true);
+        submitButton.setDisable(true);
+
+        Task<ArrayList<GeneratedSentence>> task = new Task<>() {
+            @Override
+            protected ArrayList<GeneratedSentence> call() {
+                return controller.generate(input, count); // chiamata bloccante in background
+            }
+
+            @Override
+            protected void succeeded() {
+                displayGenerated(getValue());
+                loadingIndicator.setVisible(false);
+                submitButton.setDisable(false);
+            }
+
+            @Override
+            protected void failed() {
+                renderArea.appendText("Errore durante la generazione\n");
+                loadingIndicator.setVisible(false);
+                submitButton.setDisable(false);
+            }
+        };
+
+        new Thread(task).start();
     }
 
     public void displayGenerated(ArrayList<GeneratedSentence> sentences) {
