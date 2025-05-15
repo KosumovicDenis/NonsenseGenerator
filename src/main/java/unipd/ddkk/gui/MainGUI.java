@@ -1,6 +1,7 @@
 package unipd.ddkk.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -15,17 +16,18 @@ import javafx.concurrent.Task;
 import unipd.ddkk.core.*;
 
 public class MainGUI extends Application {
+    private Service service;
+    private Controller controller;
     private final TextArea renderArea = new TextArea();
     private final TextArea historyArea = new TextArea();
+    private final TextArea syntaxTreeArea = new TextArea();
     private final ProgressIndicator loadingIndicator = new ProgressIndicator();
     private Button submitButton;
 
-    Controller controller;
-
     @Override
     public void start(Stage stage) {
-        Service service = new Service();
-        controller = new Controller(service);
+        this.service = new Service();
+        this.controller = new Controller(service);
 
         TextField inputField = new TextField();
         inputField.setPromptText("Enter your text");
@@ -50,7 +52,14 @@ public class MainGUI extends Application {
         renderArea.setWrapText(true);
         renderArea.setPrefHeight(200);
         renderArea.setPromptText("Rendered output will appear here...");
-        VBox.setVgrow(renderArea, Priority.ALWAYS); // Allow renderArea to expand and push buttonRow down
+        VBox.setVgrow(renderArea, Priority.ALWAYS);
+
+        syntaxTreeArea.setEditable(false);
+        syntaxTreeArea.setWrapText(true);
+        syntaxTreeArea.setVisible(false);
+        syntaxTreeArea.setPrefHeight(150);
+        syntaxTreeArea.setPromptText("Syntactic tree output will appear here...");
+        VBox.setVgrow(syntaxTreeArea, Priority.ALWAYS);
 
         Button copyButton = new Button("Copy");
         Button showHistoryButton = new Button("Show history");
@@ -60,9 +69,9 @@ public class MainGUI extends Application {
         HBox buttonRow = new HBox(10, copyButton, spacer, showHistoryButton);
         buttonRow.setAlignment(Pos.CENTER);
 
-        VBox outputSection = new VBox(10, renderArea, buttonRow);
+        VBox outputSection = new VBox(10, renderArea, syntaxTreeArea, buttonRow);
         outputSection.setPadding(new Insets(0, 15, 15, 15));
-        VBox.setVgrow(outputSection, Priority.ALWAYS); // Let outputSection grow within root
+        VBox.setVgrow(outputSection, Priority.ALWAYS);
         VBox root = new VBox(10, inputArea, outputSection);
 
         Stage historyStage = new Stage();
@@ -72,10 +81,9 @@ public class MainGUI extends Application {
 
         historyArea.setEditable(false);
         historyArea.setWrapText(true);
-
         VBox historyLayout = new VBox(historyArea);
-        historyLayout.setPadding(new Insets(10)); // Apply constant padding around the history layout
-        VBox.setVgrow(historyArea, Priority.ALWAYS); // Allow the TextArea to grow vertically
+        historyLayout.setPadding(new Insets(10));
+        VBox.setVgrow(historyArea, Priority.ALWAYS);
         historyStage.setScene(new Scene(historyLayout));
 
         showHistoryButton.setOnAction(e -> {
@@ -96,46 +104,69 @@ public class MainGUI extends Application {
         });
 
         submitButton.setOnAction(
-                e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue()));
+            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue())
+        );
         inputField.setOnAction(
-            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue()));
+            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue())
+        );
 
-
-        Scene scene = new Scene(root, 500, 300);
+        Scene scene = new Scene(root, 500, 450);
         stage.setScene(scene);
         stage.setTitle("Nonsense Generator");
         stage.setMinWidth(500);
-        stage.setMinHeight(300);
+        stage.setMinHeight(400);
         stage.show();
     }
 
     private void handleSubmission(String input, boolean tree, int count) {
         renderArea.clear();
+        syntaxTreeArea.clear();
+        syntaxTreeArea.setVisible(false);
+
         loadingIndicator.setVisible(true);
         submitButton.setDisable(true);
 
-        Task<ArrayList<GeneratedSentence>> task = new Task<>() {
+        Task<GenerationResult> task = new Task<>() {
             @Override
-            protected ArrayList<GeneratedSentence> call() {
-                return controller.generate(input, count); // chiamata bloccante in background
+            protected GenerationResult call() {
+                return controller.generate(input, count);
             }
 
             @Override
             protected void succeeded() {
-                displayGenerated(getValue());
+                GenerationResult res = getValue();
+
+                // Display generated sentences
+                renderArea.clear();
+                for (GeneratedSentence s : res.sentences) {
+                    renderArea.appendText(s.content + "\n");
+                }
+
+                // Display syntax tree structure if requested
+                if (tree && res.syntaxTree != null) {
+                    syntaxTreeArea.setText(formatStructure(res.syntaxTree));
+                    syntaxTreeArea.setVisible(true);
+                }
+
                 loadingIndicator.setVisible(false);
                 submitButton.setDisable(false);
             }
 
             @Override
             protected void failed() {
-                renderArea.appendText("Errore durante la generazione\n");
+                renderArea.appendText("Errore during generation\n");
                 loadingIndicator.setVisible(false);
                 submitButton.setDisable(false);
             }
         };
 
         new Thread(task).start();
+    }
+
+    private String formatStructure(SentenceStructure s) {
+        return "Noun: " + Arrays.toString(s.names) + "\n" +
+               "Verbs: " + Arrays.toString(s.verbs) + "\n" +
+               "adjectives: " + Arrays.toString(s.adjectives);
     }
 
     public void displayGenerated(ArrayList<GeneratedSentence> sentences) {
@@ -148,3 +179,4 @@ public class MainGUI extends Application {
         historyArea.appendText(record + "\n");
     }
 }
+

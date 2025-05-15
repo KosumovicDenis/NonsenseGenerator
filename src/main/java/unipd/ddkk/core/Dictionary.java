@@ -1,5 +1,4 @@
 package unipd.ddkk.core;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

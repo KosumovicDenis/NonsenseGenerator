@@ -9,8 +9,8 @@ public class Controller {
         s = ser;
     }
 
-    public ArrayList<GeneratedSentence> generate(String input, int count) {
-        return s.generatePhrases(input, count);
+    public GenerationResult generate(String input, int count) {
+            return s.generatePhrases(input, count);
     }
 
     public ArrayList<GeneratedSentence> getHistory() {
