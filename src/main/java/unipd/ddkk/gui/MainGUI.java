@@ -56,7 +56,6 @@ public class MainGUI extends Application {
 
         syntaxTreeArea.setEditable(false);
         syntaxTreeArea.setWrapText(true);
-        syntaxTreeArea.setVisible(false);
         syntaxTreeArea.setPrefHeight(150);
         syntaxTreeArea.setPromptText("Syntactic tree output will appear here...");
         VBox.setVgrow(syntaxTreeArea, Priority.ALWAYS);
@@ -121,7 +120,6 @@ public class MainGUI extends Application {
     private void handleSubmission(String input, boolean tree, int count) {
         renderArea.clear();
         syntaxTreeArea.clear();
-        syntaxTreeArea.setVisible(false);
 
         loadingIndicator.setVisible(true);
         submitButton.setDisable(true);
@@ -139,13 +137,12 @@ public class MainGUI extends Application {
                 // Display generated sentences
                 renderArea.clear();
                 for (GeneratedSentence s : res.sentences) {
-                    renderArea.appendText(s.content + "\n");
+                    renderArea.appendText("• " + s.content + "\n");
                 }
 
                 // Display syntax tree structure if requested
                 if (tree && res.syntaxTree != null) {
                     syntaxTreeArea.setText(formatStructure(res.syntaxTree));
-                    syntaxTreeArea.setVisible(true);
                 }
 
                 loadingIndicator.setVisible(false);
