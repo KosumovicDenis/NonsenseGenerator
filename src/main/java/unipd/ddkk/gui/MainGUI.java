@@ -16,7 +16,6 @@ import javafx.concurrent.Task;
 import unipd.ddkk.core.*;
 
 public class MainGUI extends Application {
-    private Service service;
     private Controller controller;
     private final TextArea renderArea = new TextArea();
     private final TextArea historyArea = new TextArea();
@@ -26,8 +25,7 @@ public class MainGUI extends Application {
 
     @Override
     public void start(Stage stage) {
-        this.service = new Service();
-        this.controller = new Controller(service);
+        this.controller = new Controller();
 
         TextField inputField = new TextField();
         inputField.setPromptText("Enter your text");
