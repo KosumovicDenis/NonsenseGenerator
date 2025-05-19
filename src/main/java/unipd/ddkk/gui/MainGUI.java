@@ -14,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.concurrent.Task;
 import unipd.ddkk.core.*;
+import atlantafx.base.theme.*;
 
 public class MainGUI extends Application {
     private Controller controller;
@@ -25,6 +26,7 @@ public class MainGUI extends Application {
 
     @Override
     public void start(Stage stage) {
+        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
         this.controller = new Controller();
 
         TextField inputField = new TextField();
@@ -32,6 +34,7 @@ public class MainGUI extends Application {
         HBox.setHgrow(inputField, Priority.ALWAYS);
 
         submitButton = new Button("Submit");
+        submitButton.getStyleClass().addAll(Styles.ACCENT);
         Spinner<Integer> spinner = new Spinner<>(1, 100, 1);
         spinner.setPrefWidth(70);
 
@@ -60,6 +63,8 @@ public class MainGUI extends Application {
 
         Button copyButton = new Button("Copy");
         Button showHistoryButton = new Button("Show history");
+        copyButton.getStyleClass().addAll(Styles.BG_NEUTRAL_EMPHASIS_PLUS);
+        showHistoryButton.getStyleClass().addAll(Styles.ACCENT);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
