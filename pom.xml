@@ -8,6 +8,52 @@
     <artifactId>gui</artifactId>
     <version>0.1</version>
 
+
+    <description>
+        NonsenseGenerator is a playful yet creative JavaFX application that constructs quirky and 
+        unpredictable sentences using randomized grammatical structures. It is ideal for writers 
+        seeking inspiration, developers experimenting with language generation, or anyone looking 
+        for a moment of whimsical amusement.
+
+        The application transforms simple text inputs into imaginative output through structured 
+        templates, randomized dictionaries, and optionally, syntax trees. Key features include a 
+        user-friendly graphical interface, customizable word banks, and a persistent history of 
+        generated results.
+    </description>
+
+    <developers>
+        <developer>
+            <name>Denis Kosumovic</name>
+            <email>denis.kosumovic@studenti.unipd.it</email>
+            <roles>
+                <role>developer</role>
+                <role>project lead</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Toni Kosumovic</name>
+            <email>toni.kosumovic@studenti.unipd.it</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Davide Fabris</name>
+            <email>davide.fabris.8@studenti.unipd.it</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Davide Rorato</name>
+            <email>davide.rorato.1@studenti.unipd.it</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>

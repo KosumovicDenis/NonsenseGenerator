@@ -16,16 +16,24 @@ public class SentenceGenerator implements Generator {
     }
 
     @Override
-    public String generatePhrase(SentenceStructure input) {
+    public String generatePhrase(SentenceStructure input, boolean addToDict, String requestedTemplate) {
         List<String> names = input.names != null ? new ArrayList<>(Arrays.asList(input.names)) : new ArrayList<>();
         List<String> verbs = input.verbs != null ? new ArrayList<>(Arrays.asList(input.verbs)) : new ArrayList<>();
         List<String> adjectives = input.adjectives != null ? new ArrayList<>(Arrays.asList(input.adjectives)) : new ArrayList<>();
 
         // Flag to track if we already used one input element
-        boolean[] usedInputElement = new boolean[] {false};
+        boolean[] usedInputElement = new boolean[] { false };
 
-        String template = dictionary.getRandom(GrammaticalElement.SENTENCE_STRUCTURE);
+        String template = requestedTemplate.equals("") ? dictionary.getRandom(GrammaticalElement.SENTENCE_STRUCTURE)
+                : requestedTemplate;
+        if (addToDict) {
+            dictionary.updateDictionary(input);
+        }
         return fillTemplate(template, names, verbs, adjectives, usedInputElement);
+    }
+
+    public List<String> getAvailableTemplates() {
+        return dictionary.getAllElements(GrammaticalElement.SENTENCE_STRUCTURE);
     }
 
     private String fillTemplate(String template,
@@ -68,7 +76,8 @@ public class SentenceGenerator implements Generator {
 
     /**
      * Picks an element either from the user list or dictionary:
-     * - If no input element has been used yet, takes from input list (if available) and sets usedInputElement = true
+     * - If no input element has been used yet, takes from input list (if available)
+     * and sets usedInputElement = true
      * - Otherwise, picks randomly between input list (if not empty) and dictionary
      */
     private String takeOrRandom(List<String> userList, GrammaticalElement fallbackElement, boolean[] usedInputElement) {
