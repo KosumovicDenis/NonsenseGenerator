@@ -5,9 +5,14 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>unipd.ddkk</groupId>
-    <artifactId>gui</artifactId>
+    <artifactId>NonsenseGenerator</artifactId>
     <version>0.1</version>
+    <url>https://nonsensegeneratorsite.netlify.app/</url>
 
+    <scm>
+        <url>https://github.com/KosumovicDenis/NonsenseGenerator</url>
+        <developerConnection>scm:git:ssh://github.com/KosumovicDenis/NonsenseGenerator.git</developerConnection>
+    </scm>
 
     <description>
         NonsenseGenerator is a playful yet creative JavaFX application that constructs quirky and 
@@ -119,7 +124,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.12.1</version>
+                <version>3.21.0</version>
             </plugin>
 
             <plugin>
