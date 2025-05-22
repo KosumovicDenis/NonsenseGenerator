@@ -22,11 +22,11 @@ public class MainGUI extends Application {
     private Controller controller;
     private final VBox renderContainer = new VBox(1); // Spacing between items
     private final TextArea historyArea = new TextArea();
-    private final TextArea syntaxTreeArea = new TextArea();
     private TreeView<String> treeView = null;
     private final Label renderPlaceholder = new Label("Rendered output will appear here...");
     private Popup classificationPopup = new Popup();
     private ArrayList<GeneratedSentence> latestGeneratedSentences = new ArrayList<>();
+    private VBox outputSection;
 
     CheckBox addToDict;
     CheckBox treeCheckBox;
@@ -94,6 +94,7 @@ public class MainGUI extends Application {
         VBox.setVgrow(renderContainer, Priority.ALWAYS);
         
         ScrollPane scrollPane = new ScrollPane(renderContainer);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(false);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -102,6 +103,9 @@ public class MainGUI extends Application {
 
         // Outer container adds border & background
         VBox scrollWrapper = new VBox(scrollPane);
+        scrollWrapper.setPrefHeight(200);
+        scrollWrapper.setMinHeight(100);
+        scrollWrapper.setMaxHeight(350);
         scrollWrapper.setPadding(new Insets(0)); // Optional, adjust spacing
         scrollWrapper.setBackground(new Background(
                 new BackgroundFill(javafx.scene.paint.Color.web("#161b22"), new CornerRadii(3), Insets.EMPTY)));
@@ -111,12 +115,6 @@ public class MainGUI extends Application {
                 new CornerRadii(3),
                 new BorderWidths(1))));
         VBox.setVgrow(scrollWrapper, Priority.ALWAYS);
-
-        syntaxTreeArea.setEditable(false);
-        syntaxTreeArea.setWrapText(true);
-        syntaxTreeArea.setPrefHeight(150);
-        syntaxTreeArea.setPromptText("Syntactic tree output will appear here...");
-        VBox.setVgrow(syntaxTreeArea, Priority.ALWAYS);
 
         Button copyButton = new Button("Copy");
         Button showHistoryButton = new Button("Show history");
@@ -128,15 +126,15 @@ public class MainGUI extends Application {
         HBox buttonRow = new HBox(10, copyButton, spacer, showHistoryButton);
         buttonRow.setAlignment(Pos.CENTER);
 
-        VBox outputSection = new VBox(10, scrollWrapper, syntaxTreeArea, buttonRow);
+        outputSection = new VBox(10, scrollWrapper, buttonRow);
         outputSection.setPadding(new Insets(0, 15, 15, 15));
         VBox.setVgrow(outputSection, Priority.ALWAYS);
         VBox root = new VBox(10, inputArea, outputSection);
 
         Stage historyStage = new Stage();
         historyStage.setTitle("Submission History");
-        historyStage.setMinWidth(500);
-        historyStage.setMinHeight(300);
+        historyStage.setMinWidth(700);
+        historyStage.setMinHeight(900);
 
         historyArea.setEditable(false);
         historyArea.setWrapText(true);
@@ -181,8 +179,6 @@ public class MainGUI extends Application {
     }
 
     private void handleSubmission(String input, int count) {
-        syntaxTreeArea.clear();
-
         loadingIndicator.setVisible(true);
         submitButton.setDisable(true);
 
@@ -248,26 +244,20 @@ public class MainGUI extends Application {
 
                 // Remove old tree if it exists
                 if (treeView != null) {
-                    ((VBox) syntaxTreeArea.getParent()).getChildren().remove(treeView);
+                    outputSection.getChildren().remove(treeView);
                     treeView = null;
                 }
 
-                if (treeCheckBox.isSelected() && res.syntaxTree != null) {
-                    syntaxTreeArea.setText(formatStructure(res.syntaxTree));
-
+                if (treeCheckBox.isSelected() && res.syntaxTree != null && !res.syntaxTree.structure.get("sentences").isEmpty()) {
                     SyntaxTreeNodeGUI parseRoot = SyntaxTreeNodeGUI.buildTree(res.syntaxTree.structure);
                     TreeItem<String> fxRoot = SyntaxTreeNodeGUI.toTreeItem(parseRoot);
                     fxRoot.setExpanded(true);
 
                     treeView = new TreeView<>(fxRoot);
-                    treeView.setPrefHeight(200);
                     treeView.setMinHeight(100);
-                    treeView.setMaxHeight(300);
+                    treeView.setMaxHeight(350);
 
-                    // Insert it just before the button row
-                    VBox outputSection = (VBox) syntaxTreeArea.getParent(); // this is your VBox(10, scrollWrapper,
-                                                                            // syntaxTreeArea, buttonRow)
-                    int insertIndex = outputSection.getChildren().indexOf(syntaxTreeArea) + 1;
+                    int insertIndex = outputSection.getChildren().indexOf(outputSection.getChildren().getLast());
                     outputSection.getChildren().add(insertIndex, treeView);
                 }
 
