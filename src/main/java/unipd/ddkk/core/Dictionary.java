@@ -1,4 +1,5 @@
 package unipd.ddkk.core;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -43,13 +44,28 @@ public class Dictionary {
         data.put(GrammaticalElement.ADJECTIVE, adjectives);
         data.put(GrammaticalElement.NOUN, nouns);
         data.put(GrammaticalElement.SENTENCE_STRUCTURE, templates);
-    
     }
 
     public void updateDictionary(SentenceStructure inputSentenceStructure) {
-        // data.put(GrammaticalElement.VERB_PRESENT, Arrays.asList(inputSentenceStructure.verbs));
-        data.put(GrammaticalElement.ADJECTIVE, Arrays.asList(inputSentenceStructure.adjectives));
-        data.put(GrammaticalElement.NOUN, Arrays.asList(inputSentenceStructure.names));
+        // Add unique adjectives
+        for (String adj : inputSentenceStructure.adjectives) {
+            if (!data.get(GrammaticalElement.ADJECTIVE).contains(adj)) {
+                data.get(GrammaticalElement.ADJECTIVE).add(adj);
+            }
+        }
+
+        // Add unique nouns
+        for (String noun : inputSentenceStructure.names) {
+            if (!data.get(GrammaticalElement.NOUN).contains(noun)) {
+                data.get(GrammaticalElement.NOUN).add(noun);
+            }
+        }
+
+        // for (String verb : inputSentenceStructure.verbs) {
+        //     if (!data.get(GrammaticalElement.VERB_PRESENT).contains(verb)) {
+        //         data.get(GrammaticalElement.VERB_PRESENT).add(verb);
+        //     }
+        // }
     }
 
     public String getRandom(GrammaticalElement e) {
@@ -59,5 +75,8 @@ public class Dictionary {
         }
         return elements.get(random.nextInt(elements.size()));
     }
-}
 
+    public List<String> getAllElements(GrammaticalElement e) {
+        return data.get(e);
+    }
+}

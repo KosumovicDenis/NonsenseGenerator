@@ -1,7 +1,8 @@
 package unipd.ddkk.core;
 
+import java.util.ArrayList;
+
 public interface APICaller {
     SentenceStructure getStructure(String sentence);
-
-    boolean isValid(String input);
+    ArrayList<PhraseClassificationAttribute> getModerationCategories(String sentence);
 }

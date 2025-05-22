@@ -71,24 +71,17 @@ public class GoogleAPICaller implements APICaller {
             return new SentenceStructure(
                 nouns.toArray(new String[0]),
                 verbs.toArray(new String[0]),
-                adjectives.toArray(new String[0])
+                adjectives.toArray(new String[0]),
+                root
             );
 
         } catch (Exception e) {
             System.out.println("[ERROR] " + e.getMessage());
-            return new SentenceStructure(new String[0], new String[0], new String[0]);
+            return new SentenceStructure(new String[0], new String[0], new String[0], null);
         }
     }
 
-    @Override
-    public boolean isValid(String input) {
-        if (input == null || input.trim().isEmpty()) {
-            return false;
-        }
-        return isContentSafe(input);
-    }
-
-    private boolean isContentSafe(String sentence) {
+    protected JsonNode callApi(String sentence) {
         try {
             URL url = URI.create("https://language.googleapis.com/v1/documents:moderateText?key=" + apiKey).toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -112,29 +105,34 @@ public class GoogleAPICaller implements APICaller {
             int responseCode = conn.getResponseCode();
             if (responseCode >= 400) {
                 System.out.println("[ERROR] ModerateText API returned code: " + responseCode);
-                return false; // Meglio bloccare in caso di errore
+                return null; // Meglio bloccare in caso di errore
             }
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(conn.getInputStream());
-            JsonNode moderationCategories = root.get("moderationCategories");
-
-            for (JsonNode category : moderationCategories) {
-                float confidence = category.get("confidence").floatValue();
-                if (confidence > 0.5) {
-                    String name = category.get("name").asText();
-                    System.out.printf("[MODERATION] Detected category: %s (%.2f)\n", name, confidence);
-                    return false;
-                }
-            }
-
-            return true;
+            return root.get("moderationCategories");
 
         } catch (Exception e) {
             System.out.println("[ERROR] ModerateText check failed: " + e.getMessage());
-            return false;
+            return null;
         }
     }
 
-}
+    public ArrayList<PhraseClassificationAttribute> getModerationCategories(String sentence) {
+        ArrayList<PhraseClassificationAttribute> arr = new ArrayList<>();
+        
+        JsonNode moderationCategories = callApi(sentence);
+        if (moderationCategories == null) {
+            return arr;
+        }
 
+        for (JsonNode category : moderationCategories) {
+            String name = category.get("name").asText();
+            float confidence = category.get("confidence").floatValue();
+            arr.add(new PhraseClassificationAttribute(name, confidence));
+        }
+
+        return arr;
+    }
+
+}

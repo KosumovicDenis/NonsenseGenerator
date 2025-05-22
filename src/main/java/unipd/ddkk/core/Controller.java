@@ -1,6 +1,7 @@
 package unipd.ddkk.core;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Controller {
     Service s;
@@ -9,8 +10,12 @@ public class Controller {
         this.s = new Service();
     }
 
-    public GenerationResult generate(String input, int count) {
-            return s.generatePhrases(input, count);
+    public GenerationResult generate(String input, boolean addToDict, int count, String selectedTemplate) {
+        return s.generatePhrases(input, addToDict, count, selectedTemplate);
+    }
+
+    public List<String> getAvailableTemplates() {
+        return s.getAvailableTemplates();
     }
 
     public ArrayList<GeneratedSentence> getHistory() {

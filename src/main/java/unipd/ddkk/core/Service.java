@@ -16,27 +16,47 @@ public class Service {
         hist = new History("history.txt");
     }
 
+    public List<String> getAvailableTemplates() {
+        return generator.getAvailableTemplates();
+    }
+
     public String getSyntacticTree(String input) {
         return "Tree(" + input + ")";
     }
-    public GenerationResult generatePhrases(String input, int count) {
+
+    public static boolean phraseIsValid(ArrayList<PhraseClassificationAttribute> categories) {
+        if (categories == null) {
+            return false;
+        }
+
+        for (PhraseClassificationAttribute attribute : categories) {
+            if (attribute.getConfidence() > 0.5) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public GenerationResult generatePhrases(String input, boolean addToDict, int count, String selectedTemplate) {
         SentenceStructure treeStructure = apiCaller.getStructure(input);
 
         ArrayList<GeneratedSentence> result = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors()
-        );
+                Runtime.getRuntime().availableProcessors());
 
         List<Future<GeneratedSentence>> futures = new ArrayList<>();
+        
         for (int i = 0; i < count; i++) {
             futures.add(executor.submit(() -> {
                 String content;
                 int attempts = 0, maxAttempts = 10;
+                ArrayList<PhraseClassificationAttribute> categories;
                 do {
-                    content = generator.generatePhrase(treeStructure);
+                    content = generator.generatePhrase(treeStructure, addToDict, selectedTemplate);
+                    categories = apiCaller.getModerationCategories(content);
                     attempts++;
-                } while (!apiCaller.isValid(content) && attempts < maxAttempts);
-                return new GeneratedSentence(content);
+                } while (!phraseIsValid(categories) && attempts < maxAttempts);
+                return new GeneratedSentence(content, categories);
             }));
         }
 
@@ -45,7 +65,7 @@ public class Service {
                 result.add(f.get());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
-                result.add(new GeneratedSentence(""));
+                result.add(new GeneratedSentence("", new ArrayList<>()));
             }
         }
         executor.shutdown();

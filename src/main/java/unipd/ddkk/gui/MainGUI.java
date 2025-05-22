@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javafx.application.Application;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.concurrent.Task;
 import unipd.ddkk.core.*;
@@ -18,9 +20,20 @@ import atlantafx.base.theme.*;
 
 public class MainGUI extends Application {
     private Controller controller;
-    private final TextArea renderArea = new TextArea();
+    private final VBox renderContainer = new VBox(1); // Spacing between items
     private final TextArea historyArea = new TextArea();
     private final TextArea syntaxTreeArea = new TextArea();
+    private TreeView<String> treeView = null;
+    private final Label renderPlaceholder = new Label("Rendered output will appear here...");
+    private Popup classificationPopup = new Popup();
+    private ArrayList<GeneratedSentence> latestGeneratedSentences = new ArrayList<>();
+
+    CheckBox addToDict;
+    CheckBox treeCheckBox;
+
+    final String noTemplateSelectedText = "Select a template (optional)";
+    private final ComboBox<String> templateDropdown = new ComboBox<>();
+
     private final ProgressIndicator loadingIndicator = new ProgressIndicator();
     private Button submitButton;
 
@@ -38,22 +51,66 @@ public class MainGUI extends Application {
         Spinner<Integer> spinner = new Spinner<>(1, 100, 1);
         spinner.setPrefWidth(70);
 
+        classificationPopup.setAutoHide(true);
+
         loadingIndicator.setVisible(false);
         loadingIndicator.setPrefSize(30, 30);
 
         HBox inputBox = new HBox(10, inputField, submitButton, spinner, loadingIndicator);
         inputBox.setAlignment(Pos.CENTER_LEFT);
 
-        CheckBox treeCheckBox = new CheckBox("Get syntactic tree");
+        templateDropdown.getItems().add(noTemplateSelectedText);
+        templateDropdown.getItems().addAll(controller.getAvailableTemplates());
+        templateDropdown.getSelectionModel().select(0);
+        templateDropdown.setMaxWidth(Double.MAX_VALUE);
 
-        VBox inputArea = new VBox(10, inputBox, treeCheckBox);
+        treeCheckBox = new CheckBox("Get syntactic tree");
+
+        addToDict = new CheckBox("Add to dictionary");
+
+        // Create info icon label
+        Label infoIcon = new Label("ⓘ");
+        infoIcon.setStyle("-fx-text-fill: gray; -fx-font-weight: bold; -fx-cursor: hand;");
+        infoIcon.setTooltip(new Tooltip(
+                "Temporarily adds words to the internal dictionary.\nThey will be cleared when the app closes."));
+
+        // Group checkbox and info icon together
+        HBox checkboxWithInfo = new HBox(2, addToDict, infoIcon);
+        checkboxWithInfo.setAlignment(Pos.CENTER_LEFT);
+
+        HBox checkboxesRow = new HBox(15, treeCheckBox, checkboxWithInfo);
+        checkboxesRow.setAlignment(Pos.CENTER_LEFT);
+
+        VBox inputArea = new VBox(10, inputBox, templateDropdown, checkboxesRow);
         inputArea.setPadding(new Insets(15));
 
-        renderArea.setEditable(false);
-        renderArea.setWrapText(true);
-        renderArea.setPrefHeight(200);
-        renderArea.setPromptText("Rendered output will appear here...");
-        VBox.setVgrow(renderArea, Priority.ALWAYS);
+        inputArea.setPadding(new Insets(15));
+
+        renderPlaceholder.setStyle("-fx-text-fill: gray; -fx-font-style: italic;");
+
+        // Inner container for sentence rows (inside scroll area)
+        renderContainer.setPadding(new Insets(10));
+        renderContainer.getChildren().add(renderPlaceholder);
+        VBox.setVgrow(renderContainer, Priority.ALWAYS);
+        
+        ScrollPane scrollPane = new ScrollPane(renderContainer);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(false);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setPannable(true);
+
+        // Outer container adds border & background
+        VBox scrollWrapper = new VBox(scrollPane);
+        scrollWrapper.setPadding(new Insets(0)); // Optional, adjust spacing
+        scrollWrapper.setBackground(new Background(
+                new BackgroundFill(javafx.scene.paint.Color.web("#161b22"), new CornerRadii(3), Insets.EMPTY)));
+        scrollWrapper.setBorder(new Border(new BorderStroke(
+                javafx.scene.paint.Color.web("#30363d"),
+                BorderStrokeStyle.SOLID,
+                new CornerRadii(3),
+                new BorderWidths(1))));
+        VBox.setVgrow(scrollWrapper, Priority.ALWAYS);
 
         syntaxTreeArea.setEditable(false);
         syntaxTreeArea.setWrapText(true);
@@ -71,7 +128,7 @@ public class MainGUI extends Application {
         HBox buttonRow = new HBox(10, copyButton, spacer, showHistoryButton);
         buttonRow.setAlignment(Pos.CENTER);
 
-        VBox outputSection = new VBox(10, renderArea, syntaxTreeArea, buttonRow);
+        VBox outputSection = new VBox(10, scrollWrapper, syntaxTreeArea, buttonRow);
         outputSection.setPadding(new Insets(0, 15, 15, 15));
         VBox.setVgrow(outputSection, Priority.ALWAYS);
         VBox root = new VBox(10, inputArea, outputSection);
@@ -97,20 +154,23 @@ public class MainGUI extends Application {
         });
 
         copyButton.setOnAction(e -> {
-            String text = renderArea.getText();
-            if (!text.isEmpty()) {
-                ClipboardContent content = new ClipboardContent();
-                content.putString(text);
-                Clipboard.getSystemClipboard().setContent(content);
+            if (latestGeneratedSentences.isEmpty())
+                return;
+
+            StringBuilder sb = new StringBuilder();
+            for (GeneratedSentence sentence : latestGeneratedSentences) {
+                sb.append(sentence.getContent()).append("\n");
             }
+
+            ClipboardContent content = new ClipboardContent();
+            content.putString(sb.toString().trim());
+            Clipboard.getSystemClipboard().setContent(content);
         });
 
         submitButton.setOnAction(
-            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue())
-        );
+                e -> handleSubmission(inputField.getText(), spinner.getValue()));
         inputField.setOnAction(
-            e -> handleSubmission(inputField.getText(), treeCheckBox.isSelected(), spinner.getValue())
-        );
+                e -> handleSubmission(inputField.getText(), spinner.getValue()));
 
         Scene scene = new Scene(root, 500, 450);
         stage.setScene(scene);
@@ -120,8 +180,7 @@ public class MainGUI extends Application {
         stage.show();
     }
 
-    private void handleSubmission(String input, boolean tree, int count) {
-        renderArea.clear();
+    private void handleSubmission(String input, int count) {
         syntaxTreeArea.clear();
 
         loadingIndicator.setVisible(true);
@@ -130,22 +189,86 @@ public class MainGUI extends Application {
         Task<GenerationResult> task = new Task<>() {
             @Override
             protected GenerationResult call() {
-                return controller.generate(input, count);
+                return controller.generate(input, addToDict.isSelected(), count,
+                        templateDropdown.getValue().equals(noTemplateSelectedText) ? "" : templateDropdown.getValue());
             }
 
             @Override
             protected void succeeded() {
                 GenerationResult res = getValue();
+                latestGeneratedSentences = res.sentences;
 
-                // Display generated sentences
-                renderArea.clear();
-                for (GeneratedSentence s : res.sentences) {
-                    renderArea.appendText("• " + s.content + "\n");
+                renderContainer.getChildren().clear(); // Clear previous content
+                if (res.sentences.isEmpty()) {
+                    renderContainer.getChildren().add(renderPlaceholder);
+                } else {
+                    for (GeneratedSentence s : res.sentences) {
+                        Label sentenceLabel = new Label(s.getContent());
+                        HBox.setHgrow(sentenceLabel, Priority.ALWAYS);
+                        sentenceLabel.setMaxWidth(Double.MAX_VALUE);
+
+                        Button detailsButton = new Button("ⓘ");
+                        detailsButton.setOnAction(e -> {
+                            // Close if already showing (toggle behavior)
+                            if (classificationPopup.isShowing()) {
+                                classificationPopup.hide();
+                                return;
+                            }
+
+                            ArrayList<PhraseClassificationAttribute> classification = s.getClassification();
+                            if (classification == null || classification.isEmpty())
+                                return;
+
+                            StringBuilder tooltipText = new StringBuilder("Classification:\n");
+                            for (PhraseClassificationAttribute attr : classification) {
+                                tooltipText.append("- ").append(attr.toString()).append("\n");
+                            }
+
+                            Label content = new Label(tooltipText.toString());
+                            content.setStyle(
+                                    "-fx-background-color: #161b22; -fx-text-fill: white; -fx-padding: 10; -fx-border-color: #30363d; -fx-border-radius: 8;");
+                            content.setWrapText(true);
+                            content.setMaxWidth(300);
+
+                            classificationPopup.getContent().clear(); // Prevent stacking content
+                            classificationPopup.getContent().add(content);
+
+                            Bounds bounds = detailsButton.localToScreen(detailsButton.getBoundsInLocal());
+                            classificationPopup.show(detailsButton, bounds.getMinX(), bounds.getMaxY());
+                        });
+
+                        Region spacer = new Region();
+                        HBox.setHgrow(spacer, Priority.ALWAYS);
+                        HBox row = new HBox(10, detailsButton, sentenceLabel, spacer);
+                        row.setAlignment(Pos.CENTER_LEFT);
+
+                        renderContainer.getChildren().add(row);
+                    }
                 }
 
-                // Display syntax tree structure if requested
-                if (tree && res.syntaxTree != null) {
+                // Remove old tree if it exists
+                if (treeView != null) {
+                    ((VBox) syntaxTreeArea.getParent()).getChildren().remove(treeView);
+                    treeView = null;
+                }
+
+                if (treeCheckBox.isSelected() && res.syntaxTree != null) {
                     syntaxTreeArea.setText(formatStructure(res.syntaxTree));
+
+                    SyntaxTreeNodeGUI parseRoot = SyntaxTreeNodeGUI.buildTree(res.syntaxTree.structure);
+                    TreeItem<String> fxRoot = SyntaxTreeNodeGUI.toTreeItem(parseRoot);
+                    fxRoot.setExpanded(true);
+
+                    treeView = new TreeView<>(fxRoot);
+                    treeView.setPrefHeight(200);
+                    treeView.setMinHeight(100);
+                    treeView.setMaxHeight(300);
+
+                    // Insert it just before the button row
+                    VBox outputSection = (VBox) syntaxTreeArea.getParent(); // this is your VBox(10, scrollWrapper,
+                                                                            // syntaxTreeArea, buttonRow)
+                    int insertIndex = outputSection.getChildren().indexOf(syntaxTreeArea) + 1;
+                    outputSection.getChildren().add(insertIndex, treeView);
                 }
 
                 loadingIndicator.setVisible(false);
@@ -154,7 +277,6 @@ public class MainGUI extends Application {
 
             @Override
             protected void failed() {
-                renderArea.appendText("Errore during generation\n");
                 loadingIndicator.setVisible(false);
                 submitButton.setDisable(false);
             }
@@ -165,18 +287,11 @@ public class MainGUI extends Application {
 
     private String formatStructure(SentenceStructure s) {
         return "Noun: " + Arrays.toString(s.names) + "\n" +
-               "Verbs: " + Arrays.toString(s.verbs) + "\n" +
-               "adjectives: " + Arrays.toString(s.adjectives);
-    }
-
-    public void displayGenerated(ArrayList<GeneratedSentence> sentences) {
-        for (GeneratedSentence sentence : sentences) {
-            renderArea.appendText(sentence.content + "\n");
-        }
+                "Verbs: " + Arrays.toString(s.verbs) + "\n" +
+                "adjectives: " + Arrays.toString(s.adjectives);
     }
 
     public void updateHistory(String record) {
         historyArea.appendText(record + "\n");
     }
 }
-
