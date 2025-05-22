@@ -71,12 +71,13 @@ public class GoogleAPICaller implements APICaller {
             return new SentenceStructure(
                 nouns.toArray(new String[0]),
                 verbs.toArray(new String[0]),
-                adjectives.toArray(new String[0])
+                adjectives.toArray(new String[0]),
+                root
             );
 
         } catch (Exception e) {
             System.out.println("[ERROR] " + e.getMessage());
-            return new SentenceStructure(new String[0], new String[0], new String[0]);
+            return new SentenceStructure(new String[0], new String[0], new String[0], null);
         }
     }
 

@@ -20,11 +20,13 @@ import atlantafx.base.theme.*;
 
 public class MainGUI extends Application {
     private Controller controller;
-    private final VBox renderContainer = new VBox(1); // 5 is spacing between items
+    private final VBox renderContainer = new VBox(1); // Spacing between items
     private final TextArea historyArea = new TextArea();
     private final TextArea syntaxTreeArea = new TextArea();
+    private TreeView<String> treeView = null;
     private final Label renderPlaceholder = new Label("Rendered output will appear here...");
     private Popup classificationPopup = new Popup();
+    private ArrayList<GeneratedSentence> latestGeneratedSentences = new ArrayList<>();
 
     CheckBox addToDict;
     CheckBox treeCheckBox;
@@ -48,6 +50,8 @@ public class MainGUI extends Application {
         submitButton.getStyleClass().addAll(Styles.ACCENT);
         Spinner<Integer> spinner = new Spinner<>(1, 100, 1);
         spinner.setPrefWidth(70);
+
+        classificationPopup.setAutoHide(true);
 
         loadingIndicator.setVisible(false);
         loadingIndicator.setPrefSize(30, 30);
@@ -82,25 +86,19 @@ public class MainGUI extends Application {
 
         inputArea.setPadding(new Insets(15));
 
-        ScrollPane scrollPane = new ScrollPane(renderContainer);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPrefHeight(300); // or however tall you want
-
         renderPlaceholder.setStyle("-fx-text-fill: gray; -fx-font-style: italic;");
 
         // Inner container for sentence rows (inside scroll area)
         renderContainer.setPadding(new Insets(10));
         renderContainer.getChildren().add(renderPlaceholder);
         VBox.setVgrow(renderContainer, Priority.ALWAYS);
-
-        // ScrollPane for horizontal scrolling
+        
+        ScrollPane scrollPane = new ScrollPane(renderContainer);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(false);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setPannable(true);
-        scrollPane.setStyle("-fx-background-color: transparent;");
-        scrollPane.setPrefHeight(300);
 
         // Outer container adds border & background
         VBox scrollWrapper = new VBox(scrollPane);
@@ -155,14 +153,19 @@ public class MainGUI extends Application {
             historyStage.show();
         });
 
-        // TODO!!
-        // copyButton.setOnAction(e -> {
-        // if (!text.isEmpty()) {
-        // ClipboardContent content = new ClipboardContent();
-        // content.putString(text);
-        // Clipboard.getSystemClipboard().setContent(content);
-        // }
-        // });
+        copyButton.setOnAction(e -> {
+            if (latestGeneratedSentences.isEmpty())
+                return;
+
+            StringBuilder sb = new StringBuilder();
+            for (GeneratedSentence sentence : latestGeneratedSentences) {
+                sb.append(sentence.getContent()).append("\n");
+            }
+
+            ClipboardContent content = new ClipboardContent();
+            content.putString(sb.toString().trim());
+            Clipboard.getSystemClipboard().setContent(content);
+        });
 
         submitButton.setOnAction(
                 e -> handleSubmission(inputField.getText(), spinner.getValue()));
@@ -193,6 +196,7 @@ public class MainGUI extends Application {
             @Override
             protected void succeeded() {
                 GenerationResult res = getValue();
+                latestGeneratedSentences = res.sentences;
 
                 renderContainer.getChildren().clear(); // Clear previous content
                 if (res.sentences.isEmpty()) {
@@ -242,9 +246,29 @@ public class MainGUI extends Application {
                     }
                 }
 
-                // Display syntax tree structure if requested
+                // Remove old tree if it exists
+                if (treeView != null) {
+                    ((VBox) syntaxTreeArea.getParent()).getChildren().remove(treeView);
+                    treeView = null;
+                }
+
                 if (treeCheckBox.isSelected() && res.syntaxTree != null) {
                     syntaxTreeArea.setText(formatStructure(res.syntaxTree));
+
+                    SyntaxTreeNodeGUI parseRoot = SyntaxTreeNodeGUI.buildTree(res.syntaxTree.structure);
+                    TreeItem<String> fxRoot = SyntaxTreeNodeGUI.toTreeItem(parseRoot);
+                    fxRoot.setExpanded(true);
+
+                    treeView = new TreeView<>(fxRoot);
+                    treeView.setPrefHeight(200);
+                    treeView.setMinHeight(100);
+                    treeView.setMaxHeight(300);
+
+                    // Insert it just before the button row
+                    VBox outputSection = (VBox) syntaxTreeArea.getParent(); // this is your VBox(10, scrollWrapper,
+                                                                            // syntaxTreeArea, buttonRow)
+                    int insertIndex = outputSection.getChildren().indexOf(syntaxTreeArea) + 1;
+                    outputSection.getChildren().add(insertIndex, treeView);
                 }
 
                 loadingIndicator.setVisible(false);
