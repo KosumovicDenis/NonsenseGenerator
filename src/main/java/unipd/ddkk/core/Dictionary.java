@@ -1,6 +1,7 @@
 package unipd.ddkk.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -61,11 +62,40 @@ public class Dictionary {
             }
         }
 
-        // for (String verb : inputSentenceStructure.verbs) {
-        //     if (!data.get(GrammaticalElement.VERB_PRESENT).contains(verb)) {
-        //         data.get(GrammaticalElement.VERB_PRESENT).add(verb);
-        //     }
-        // }
+        JsonNode tokens = inputSentenceStructure.structure.get("tokens");
+
+        for (JsonNode token : tokens) {
+            String text = token.get("text").get("content").asText();
+            String tag = token.get("partOfSpeech").get("tag").asText();
+            String person = token.get("partOfSpeech").get("person").asText();
+            String tense = token.get("partOfSpeech").get("tense").asText();
+
+            if (tag.equals("VERB")) {
+                GrammaticalElement ge = null;
+
+                switch (tense) {
+                    case "PRESENT":
+                        if (person.equals("FIRST")) {
+                            ge = GrammaticalElement.VERB_PRESENT;
+                        } else if (person.equals("THIRD")) {
+                            ge = GrammaticalElement.VERB_PRESENT_THIRD_PERSON;
+                        }
+                        break;
+                    case "PAST":
+                        if (person.equals("FIRST")) {
+                            ge = GrammaticalElement.VERB_PAST;
+                        }
+                        break;
+                    case "FUTURE":
+                        ge = GrammaticalElement.VERB_FUTURE;
+                        break;
+                }
+
+                if (ge != null && !data.get(ge).contains(text)) {
+                    data.get(ge).add(text);
+                }
+            }
+        }
     }
 
     public String getRandom(GrammaticalElement e) {

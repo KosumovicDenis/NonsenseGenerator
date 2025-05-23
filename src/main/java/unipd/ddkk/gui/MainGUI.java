@@ -1,7 +1,6 @@
 package unipd.ddkk.gui;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javafx.application.Application;
 import javafx.geometry.Bounds;
@@ -248,7 +247,7 @@ public class MainGUI extends Application {
                     treeView = null;
                 }
 
-                if (treeCheckBox.isSelected() && res.syntaxTree != null && !res.syntaxTree.structure.get("sentences").isEmpty()) {
+                if (treeCheckBox.isSelected() && res.syntaxTree != null && res.syntaxTree.structure != null && !res.syntaxTree.structure.get("sentences").isEmpty()) {
                     SyntaxTreeNodeGUI parseRoot = SyntaxTreeNodeGUI.buildTree(res.syntaxTree.structure);
                     TreeItem<String> fxRoot = SyntaxTreeNodeGUI.toTreeItem(parseRoot);
                     fxRoot.setExpanded(true);
@@ -273,12 +272,6 @@ public class MainGUI extends Application {
         };
 
         new Thread(task).start();
-    }
-
-    private String formatStructure(SentenceStructure s) {
-        return "Noun: " + Arrays.toString(s.names) + "\n" +
-                "Verbs: " + Arrays.toString(s.verbs) + "\n" +
-                "adjectives: " + Arrays.toString(s.adjectives);
     }
 
     public void updateHistory(String record) {
