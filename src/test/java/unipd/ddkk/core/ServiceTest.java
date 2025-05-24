@@ -32,10 +32,12 @@ public class ServiceTest {
     void testGeneratePhrasesCount() {
         // Arrange
         String input = "";
+        boolean addToDict = false;
         int count = 5;
+        String selectedTemplate = "";
         int expectedPhrasesNumber = 5;
         // Act
-        GenerationResult result = service.generatePhrases(input, count);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
 
         int phrasesNumber = result.sentences.size();
 
@@ -48,9 +50,11 @@ public class ServiceTest {
     void testGeneratePhrasesSyntaxTree() {
         // Arrange
         String input = "I like Trains";
+        boolean addToDict = false;
         int count = 5;
+        String selectedTemplate = "";
         // Act
-        GenerationResult result = service.generatePhrases(input, count);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
 
 
         boolean isValid = true;
@@ -69,9 +73,11 @@ public class ServiceTest {
     void testGeneratePhrasesSyntaxTreeLongInput() {
         // Arrange
         String input = "Despite the increasingly complex array of technological advancements, societal transformations, and environmental challenges facing humanity in the twenty-first century—ranging from artificial intelligence and quantum computing to climate change, resource scarcity, and geopolitical instability—individuals, organizations, and governments around the world must continuously adapt, innovate, and collaborate in order to navigate this intricate web of interdependencies, mitigate potential risks, and ultimately strive toward a more equitable, sustainable, and resilient future for all";
+        boolean addToDict = false;
         int count = 5;
+        String selectedTemplate = "";
         // Act
-        GenerationResult result = service.generatePhrases(input, count);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
         
         
         boolean isValid = true;
