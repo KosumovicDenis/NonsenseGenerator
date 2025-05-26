@@ -29,6 +29,7 @@ public class MainGUI extends Application {
 
     CheckBox addToDict;
     CheckBox treeCheckBox;
+    CheckBox randomSentenceTemplate;
 
     final String noTemplateSelectedText = "Select a template (optional)";
     private final ComboBox<String> templateDropdown = new ComboBox<>();
@@ -63,9 +64,14 @@ public class MainGUI extends Application {
         templateDropdown.getSelectionModel().select(0);
         templateDropdown.setMaxWidth(Double.MAX_VALUE);
 
-        treeCheckBox = new CheckBox("Get syntactic tree");
-
         addToDict = new CheckBox("Add to dictionary");
+        treeCheckBox = new CheckBox("Get syntactic tree");
+        randomSentenceTemplate = new CheckBox("Random template");
+
+        // Disable templateDropdown if randomSentenceTemplate is selected
+        randomSentenceTemplate.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+            templateDropdown.setDisable(isNowSelected);
+        });
 
         // Create info icon label
         Label infoIcon = new Label("ⓘ");
@@ -77,7 +83,7 @@ public class MainGUI extends Application {
         HBox checkboxWithInfo = new HBox(2, addToDict, infoIcon);
         checkboxWithInfo.setAlignment(Pos.CENTER_LEFT);
 
-        HBox checkboxesRow = new HBox(15, treeCheckBox, checkboxWithInfo);
+        HBox checkboxesRow = new HBox(15, treeCheckBox, checkboxWithInfo, randomSentenceTemplate);
         checkboxesRow.setAlignment(Pos.CENTER_LEFT);
 
         VBox inputArea = new VBox(10, inputBox, templateDropdown, checkboxesRow);
@@ -91,7 +97,7 @@ public class MainGUI extends Application {
         renderContainer.setPadding(new Insets(10));
         renderContainer.getChildren().add(renderPlaceholder);
         VBox.setVgrow(renderContainer, Priority.ALWAYS);
-        
+
         ScrollPane scrollPane = new ScrollPane(renderContainer);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         scrollPane.setFitToHeight(true);
@@ -169,7 +175,7 @@ public class MainGUI extends Application {
         inputField.setOnAction(
                 e -> handleSubmission(inputField.getText(), spinner.getValue()));
 
-        Scene scene = new Scene(root, 500, 450);
+        Scene scene = new Scene(root, 550, 550);
         stage.setScene(scene);
         stage.setTitle("Nonsense Generator");
         stage.setMinWidth(500);
@@ -185,7 +191,9 @@ public class MainGUI extends Application {
             @Override
             protected GenerationResult call() {
                 return controller.generate(input, addToDict.isSelected(), count,
-                        templateDropdown.getValue().equals(noTemplateSelectedText) ? "" : templateDropdown.getValue());
+                        randomSentenceTemplate.isSelected() ? SentenceTemplateGenerator.generateTemplate()
+                                : templateDropdown.getValue().equals(noTemplateSelectedText) ? ""
+                                        : templateDropdown.getValue());
             }
 
             @Override
@@ -247,7 +255,8 @@ public class MainGUI extends Application {
                     treeView = null;
                 }
 
-                if (treeCheckBox.isSelected() && res.syntaxTree != null && res.syntaxTree.structure != null && !res.syntaxTree.structure.get("sentences").isEmpty()) {
+                if (treeCheckBox.isSelected() && res.syntaxTree != null && res.syntaxTree.structure != null
+                        && !res.syntaxTree.structure.get("sentences").isEmpty()) {
                     SyntaxTreeNodeGUI parseRoot = SyntaxTreeNodeGUI.buildTree(res.syntaxTree.structure);
                     TreeItem<String> fxRoot = SyntaxTreeNodeGUI.toTreeItem(parseRoot);
                     fxRoot.setExpanded(true);
