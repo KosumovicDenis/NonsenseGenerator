@@ -1,0 +1,71 @@
+@startuml
+actor User
+participant Controller
+participant Service
+participant GoogleAPICaller as API
+participant SentenceGenerator as Generator
+participant History
+participant GeneratedSentence
+participant GenerationResult
+
+User -> Controller : generate(input, addToDict, count, template)
+activate Controller
+Controller -> Service : generatePhrases(input, addToDict, count, template)
+activate Service
+
+Service -> API : getStructure(input)
+activate API
+API --> Service : SentenceStructure
+deactivate API
+
+loop count volte
+    Service -> Generator : generatePhrase(structure, addToDict, template)
+    activate Generator
+    Generator --> Service : String phrase
+    deactivate Generator
+
+    Service -> API : getModerationCategories(phrase)
+    activate API
+    API --> Service : List<PhraseClassificationAttribute>
+    deactivate API
+
+    alt frase valida
+        Service -> GeneratedSentence : new GeneratedSentence(phrase, categories)
+        activate GeneratedSentence
+        Service <-- GeneratedSentence : GeneratedSentence
+        deactivate GeneratedSentence
+    else frase NON valida (tentativi < maxAttempts)
+        loop retry fino a maxAttempts
+            Service -> Generator : generatePhrase(...)
+            activate Generator
+            Generator --> Service : phrase
+            deactivate Generator
+
+            Service -> API : getModerationCategories(...)
+            activate API
+            API --> Service : categories
+            deactivate API
+        end
+        Service -> GeneratedSentence : new GeneratedSentence("", [])
+        activate GeneratedSentence
+        Service <-- GeneratedSentence : GeneratedSentence
+        deactivate GeneratedSentence
+    end
+end
+
+Service -> History : push(ArrayList<GeneratedSentence>)
+activate History
+History --> Service : void
+deactivate History
+
+Service -> GenerationResult : new GenerationResult(result, structure)
+activate GenerationResult
+GenerationResult --> Service : GenerationResult
+deactivate GenerationResult
+
+Service --> Controller : GenerationResult
+deactivate Service
+
+Controller --> User : GenerationResult
+deactivate Controller
+@enduml

@@ -1,0 +1,176 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+interface APICaller << interface >> {
+  + getStructure(String): SentenceStructure
+  + getModerationCategories(String): ArrayList<PhraseClassificationAttribute>
+}
+class Controller {
+  + Controller(): 
+  ~ s: Service
+  + getAvailableTemplates(): List<String>
+  + generate(String, boolean, int, String): GenerationResult
+  + getHistory(): ArrayList<GeneratedSentence>
+}
+class Dictionary {
+  + Dictionary(): 
+  - data: Map<GrammaticalElement, List<String>>
+  - random: Random
+  - mapper: ObjectMapper
+  + updateDictionary(SentenceStructure): void
+  - loadElements(): void
+  + getAllElements(GrammaticalElement): List<String>
+  + getRandom(GrammaticalElement): String
+}
+class EnvFileNotFoundException {
+  + EnvFileNotFoundException(String): 
+}
+class EnvLoader {
+  + EnvLoader(): 
+  + loadEnv(String): Map<String, String>
+}
+class GeneratedSentence {
+  + GeneratedSentence(String, ArrayList<PhraseClassificationAttribute>): 
+  + GeneratedSentence(String, ArrayList<PhraseClassificationAttribute>, Date): 
+  - formatter: SimpleDateFormat
+  - contentClassificationsSeparator: String
+  ~ date: Date
+  - dateContentSeparator: String
+  ~ categories: ArrayList<PhraseClassificationAttribute>
+  ~ content: String
+  + getContent(): String
+  + fromString(String): GeneratedSentence
+  + getClassification(): ArrayList<PhraseClassificationAttribute>
+  + toString(): String
+  + getDate(): Date
+}
+class GenerationResult {
+  + GenerationResult(ArrayList<GeneratedSentence>, SentenceStructure): 
+  + sentences: ArrayList<GeneratedSentence>
+  + syntaxTree: SentenceStructure
+}
+interface Generator << interface >> {
+  + getAvailableTemplates(): List<String>
+  + generatePhrase(SentenceStructure, boolean, String): String
+}
+class GoogleAPICaller {
+  + GoogleAPICaller(): 
+  - apiKey: String
+  + getStructure(String): SentenceStructure
+  # callApi(String): JsonNode
+  + getModerationCategories(String): ArrayList<PhraseClassificationAttribute>
+}
+enum GrammaticalElement << enumeration >> {
+  + GrammaticalElement(): 
+  + VERB_PRESENT_THIRD_PERSON: 
+  + SENTENCE_STRUCTURE: 
+  + NOUN: 
+  + ADJECTIVE: 
+  + values(): GrammaticalElement[]
+  + valueOf(String): GrammaticalElement
+}
+class History {
+  + History(String): 
+  - fileName: String
+  - history: ArrayList<GeneratedSentence>
+  + push(ArrayList<GeneratedSentence>): void
+  - loadHistoryFromFile(String): ArrayList<GeneratedSentence>
+  + push(GeneratedSentence): void
+  + get(): ArrayList<GeneratedSentence>
+  - saveHistoryToFile(String): void
+}
+class MockGoogleAPICaller {
+  + MockGoogleAPICaller(): 
+  - random: Random
+  - mapper: ObjectMapper
+  + getStructure(String): SentenceStructure
+  # callApi(String): JsonNode
+  + getModerationCategories(String): ArrayList<PhraseClassificationAttribute>
+}
+class PhraseClassificationAttribute {
+  + PhraseClassificationAttribute(String, float): 
+  - nameConfidenceSeparator: String
+  - confidence: float
+  - name: String
+  + toString(): String
+  + getName(): String
+  + getConfidence(): float
+  + fromString(String): PhraseClassificationAttribute
+}
+class SentenceGenerator {
+  + SentenceGenerator(): 
+  - dictionary: Dictionary
+  - random: Random
+  + getAvailableTemplates(): List<String>
+  - fillTemplate(String, List<String>, List<String>, List<String>, boolean[]): String
+  - takeOrRandom(List<String>, GrammaticalElement, boolean[]): String
+  + generatePhrase(SentenceStructure, boolean, String): String
+}
+class SentenceStructure {
+  + SentenceStructure(String[], String[], String[], JsonNode): 
+  + adjectives: String[]
+  + verbs: String[]
+  + structure: JsonNode
+  + names: String[]
+}
+class SentenceTemplateGenerator {
+  + SentenceTemplateGenerator(): 
+  - verbs: String[]
+  - subjects: String[]
+  - subordinatingConjunctions: String[]
+  - rand: Random
+  - prepositionalPhrases: String[]
+  - objects: String[]
+  - generateClause(): String
+  - capitalize(String): String
+  + main(String[]): void
+  + generateTemplate(): String
+}
+class Service {
+  + Service(): 
+  - generator: Generator
+  - apiCaller: APICaller
+  - hist: History
+  + phraseIsValid(ArrayList<PhraseClassificationAttribute>): boolean
+  + getHistory(): ArrayList<GeneratedSentence>
+  + getSyntacticTree(String): String
+  + getAvailableTemplates(): List<String>
+  + generatePhrases(String, boolean, int, String): GenerationResult
+}
+class SyntaxTreeNodeGUI {
+  + SyntaxTreeNodeGUI(String, String): 
+  ~ details: String
+  ~ text: String
+  ~ children: List<SyntaxTreeNodeGUI>
+  + buildTree(JsonNode): SyntaxTreeNodeGUI
+  + toTreeItem(SyntaxTreeNodeGUI): TreeItem<String>
+}
+
+Controller                    "1" *-[#595959,plain]-> "s\n1" Service                       
+Controller                     -[#595959,dashed]->  Service                       : "«create»"
+Dictionary                    "1" *-[#595959,plain]-> "data\n*" GrammaticalElement            
+EnvLoader                      -[#595959,dashed]->  EnvFileNotFoundException      : "«create»"
+GeneratedSentence             "1" *-[#595959,plain]-> "categories\n*" PhraseClassificationAttribute 
+GenerationResult              "1" *-[#595959,plain]-> "sentences\n*" GeneratedSentence             
+GenerationResult              "1" *-[#595959,plain]-> "syntaxTree\n1" SentenceStructure             
+GoogleAPICaller                -[#008200,dashed]-^  APICaller                     
+GoogleAPICaller                -[#595959,dashed]->  PhraseClassificationAttribute : "«create»"
+GoogleAPICaller                -[#595959,dashed]->  SentenceStructure             : "«create»"
+History                       "1" *-[#595959,plain]-> "history\n*" GeneratedSentence             
+MockGoogleAPICaller            -[#000082,plain]-^  GoogleAPICaller               
+MockGoogleAPICaller            -[#595959,dashed]->  SentenceStructure             : "«create»"
+SentenceGenerator              -[#595959,dashed]->  Dictionary                    : "«create»"
+SentenceGenerator             "1" *-[#595959,plain]-> "dictionary\n1" Dictionary                    
+SentenceGenerator              -[#008200,dashed]-^  Generator                     
+Service                       "1" *-[#595959,plain]-> "apiCaller\n1" APICaller                     
+Service                        -[#595959,dashed]->  GeneratedSentence             : "«create»"
+Service                        -[#595959,dashed]->  GenerationResult              : "«create»"
+Service                       "1" *-[#595959,plain]-> "generator\n1" Generator                     
+Service                        -[#595959,dashed]->  GoogleAPICaller               : "«create»"
+Service                        -[#595959,dashed]->  History                       : "«create»"
+Service                       "1" *-[#595959,plain]-> "hist\n1" History                       
+Service                        -[#595959,dashed]->  SentenceGenerator             : "«create»"
+@enduml
