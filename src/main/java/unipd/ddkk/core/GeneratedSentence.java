@@ -57,7 +57,7 @@ public class GeneratedSentence {
                         try {
                             classifications.add(PhraseClassificationAttribute.fromString(classStr));
                         } catch (IllegalArgumentException e) {
-                            System.out.println("Error parsing PhraseClassificationAttribute, skipping... (found \"" + classStr + "\")");
+                            System.out.println("Error parsing PhraseClassificationAttribute, skipping... (found unexpected \"" + classStr + "\")");
                         }
                     }
                 }

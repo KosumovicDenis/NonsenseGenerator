@@ -3,7 +3,7 @@ package unipd.ddkk.core;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ public class ServiceTest {
 
     private Service service;
 
-    @BeforeEach
+    @BeforeAll
     void setUp() {
         service = new Service();
     }

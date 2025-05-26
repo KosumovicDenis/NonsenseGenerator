@@ -38,8 +38,8 @@ public class DictionaryTest {
     // and that duplicates are not added.
     @Test
     public void testUpdateDictionaryAdjectivesNouns() throws Exception {
-        String[] adjectives = {"brave", "strong"};
-        String[] names = {"lion", "tiger"};
+        String[] adjectives = {"aaa", "bbb"};
+        String[] names = {"ccc", "ddd"};
         String[] verbs = {};
 
         JsonNode structure = new ObjectMapper().readTree("{ \"tokens\": [] }");
@@ -47,8 +47,8 @@ public class DictionaryTest {
 
         dictionary.updateDictionary(sentence);
 
-        assertTrue(dictionary.getAllElements(GrammaticalElement.ADJECTIVE).contains("brave"));
-        assertTrue(dictionary.getAllElements(GrammaticalElement.NOUN).contains("tiger"));
+        assertTrue(dictionary.getAllElements(GrammaticalElement.ADJECTIVE).contains("aaa"));
+        assertTrue(dictionary.getAllElements(GrammaticalElement.NOUN).contains("ddd"));
     }
 
     // Checks that verbs from the input structure are categorized correctly by tense and person
