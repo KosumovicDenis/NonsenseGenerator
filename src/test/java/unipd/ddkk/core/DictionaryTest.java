@@ -59,35 +59,11 @@ public class DictionaryTest {
         {
           "tokens": [
             {
-              "text": { "content": "run" },
-              "partOfSpeech": {
-                "tag": "VERB",
-                "tense": "PRESENT",
-                "person": "FIRST"
-              }
-            },
-            {
-              "text": { "content": "runs" },
+              "text": { "content": "dives" },
               "partOfSpeech": {
                 "tag": "VERB",
                 "tense": "PRESENT",
                 "person": "THIRD"
-              }
-            },
-            {
-              "text": { "content": "ran" },
-              "partOfSpeech": {
-                "tag": "VERB",
-                "tense": "PAST",
-                "person": "FIRST"
-              }
-            },
-            {
-              "text": { "content": "will run" },
-              "partOfSpeech": {
-                "tag": "VERB",
-                "tense": "FUTURE",
-                "person": "SECOND"
               }
             }
           ]
@@ -98,10 +74,7 @@ public class DictionaryTest {
 
         dictionary.updateDictionary(sentence);
 
-        assertTrue(dictionary.getAllElements(GrammaticalElement.VERB_PRESENT).contains("run"));
-        assertTrue(dictionary.getAllElements(GrammaticalElement.VERB_PRESENT_THIRD_PERSON).contains("runs"));
-        assertTrue(dictionary.getAllElements(GrammaticalElement.VERB_PAST).contains("ran"));
-        assertTrue(dictionary.getAllElements(GrammaticalElement.VERB_FUTURE).contains("will run"));
+        assertTrue(dictionary.getAllElements(GrammaticalElement.VERB_PRESENT_THIRD_PERSON).contains("dives"));
     }
 
     // Ensures that adjectives already present in the dictionary are not duplicated when updating.

@@ -1,8 +1,12 @@
 package unipd.ddkk.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,19 +32,8 @@ public class Dictionary {
         List<String> adjectives = mapper.readValue(new File(basePath, "adjective.json"), new TypeReference<List<String>>() {});
         List<String> nouns = mapper.readValue(new File(basePath, "noun.json"), new TypeReference<List<String>>() {});
         List<String> templates = mapper.readValue(new File(basePath, "template.json"), new TypeReference<List<String>>() {});
-        List<List<String>> verbPairs = mapper.readValue(new File(basePath, "verb.json"), new TypeReference<List<List<String>>>() {});
+        List<String> thirdPersonVerbs = mapper.readValue(new File(basePath, "verb.json"), new TypeReference<List<String>>() {});
 
-        List<String> baseVerbs = new ArrayList<>();
-        List<String> thirdPersonVerbs = new ArrayList<>();
-
-        for (List<String> pair : verbPairs) {
-            if (pair.size() == 2) {
-                baseVerbs.add(pair.get(0));
-                thirdPersonVerbs.add(pair.get(1));
-            }
-        }
-
-        data.put(GrammaticalElement.VERB_PRESENT, baseVerbs);
         data.put(GrammaticalElement.VERB_PRESENT_THIRD_PERSON, thirdPersonVerbs);
         data.put(GrammaticalElement.ADJECTIVE, adjectives);
         data.put(GrammaticalElement.NOUN, nouns);
@@ -72,23 +65,8 @@ public class Dictionary {
 
             if (tag.equals("VERB")) {
                 GrammaticalElement ge = null;
-
-                switch (tense) {
-                    case "PRESENT":
-                        if (person.equals("FIRST")) {
-                            ge = GrammaticalElement.VERB_PRESENT;
-                        } else if (person.equals("THIRD")) {
-                            ge = GrammaticalElement.VERB_PRESENT_THIRD_PERSON;
-                        }
-                        break;
-                    case "PAST":
-                        if (person.equals("FIRST")) {
-                            ge = GrammaticalElement.VERB_PAST;
-                        }
-                        break;
-                    case "FUTURE":
-                        ge = GrammaticalElement.VERB_FUTURE;
-                        break;
+                if (tense.equals("PRESENT") && person.equals("THIRD")) {
+                    ge = GrammaticalElement.VERB_PRESENT_THIRD_PERSON;
                 }
 
                 if (ge != null && !data.get(ge).contains(text)) {
@@ -109,4 +87,5 @@ public class Dictionary {
     public List<String> getAllElements(GrammaticalElement e) {
         return data.get(e);
     }
+
 }
