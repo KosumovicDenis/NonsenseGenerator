@@ -66,6 +66,14 @@ public class ServiceTest {
         assertTrue(isValid, "All sentences should contain at least one word from the syntax tree");
     }
 
+    @Test
+    @DisplayName("Check if getSyntacticTree API returns the same phrase that gets sent")
+    void getSyntacticTreeTest() {
+        String sample_input = "aaa";
+
+        SentenceStructure struct = service.getSyntacticTree(sample_input);
+        assertTrue(struct.structure.get("sentences").toString().contains(sample_input));
+    }
     
     @Test
     @DisplayName("Test behavior of generatePhrases() on syntax with long input")
@@ -88,7 +96,7 @@ public class ServiceTest {
         }
         assertTrue(isValid, "All sentences should contain at least one word from the syntax tree");
     }
-    
+
     public boolean contains(GeneratedSentence sentenceContent, String[] words) {
         for (String word : words) {
             if (sentenceContent.content.toLowerCase().contains(word.toLowerCase())) {
@@ -97,5 +105,7 @@ public class ServiceTest {
         }
         return false;
     }
+
+    
 }
 

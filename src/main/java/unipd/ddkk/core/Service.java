@@ -20,8 +20,8 @@ public class Service {
         return generator.getAvailableTemplates();
     }
 
-    public String getSyntacticTree(String input) {
-        return "Tree(" + input + ")";
+    public SentenceStructure getSyntacticTree(String input) {
+        return apiCaller.getStructure(input);
     }
 
     public static boolean phraseIsValid(ArrayList<PhraseClassificationAttribute> categories) {
