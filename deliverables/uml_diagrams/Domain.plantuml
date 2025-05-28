@@ -1,0 +1,31 @@
+@startuml
+object User
+object Sentence
+object "Grammatical Analyzer"
+object "Syntactic Tree"
+object Dictionary{
+  nouns
+  verbs
+  adjectives
+}
+object Generator
+object "Random Sentence"{
+  date
+  toxicityLevel
+}
+object "Toxicity Analyzer"
+object History
+
+User "1" -- "*" Sentence : GIVES >
+Sentence "*" -- "1" "Grammatical Analyzer" : ANALYZES <
+"Grammatical Analyzer" "1"  -- "*" "Syntactic Tree" : RETURNS >
+"Syntactic Tree" "1" *-- "1" Sentence : DESCRIBES >
+Generator "1" -- "*" "Random Sentence": CREATES >
+Generator "1" -- "*" "Syntactic Tree" : USES >
+"Random Sentence" "*" -- "1" "Toxicity Analyzer" : CHECKS <
+Generator "1" -- "1" Dictionary : USES >
+"Random Sentence" "*" -- "1" History : STORED IN >  
+"Syntactic Tree" "*" -- "1" Dictionary : UPDATES >
+
+
+@enduml

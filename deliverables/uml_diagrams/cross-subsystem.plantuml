@@ -1,0 +1,63 @@
+@startuml
+
+mainframe Random Generator System
+
+participant "User Interface"
+participant Generator
+participant Dictionary
+participant History
+participant "Analyze Syntax Interface"
+participant "Moderate Text Interface"
+
+activate "User Interface"
+"User Interface" -> Generator: GenerateSentences
+
+activate Generator
+Generator -> "Analyze Syntax Interface": AnalyzeSentence
+activate "Analyze Syntax Interface"
+Generator <-- "Analyze Syntax Interface"
+deactivate "Analyze Syntax Interface"
+
+"User Interface" -> Generator: RequestSyntaxTree
+activate "User Interface"
+activate Generator
+"User Interface" <-- Generator
+deactivate Generator
+deactivate "User Interface"
+
+Generator -> Dictionary: UpdateDictionary
+activate Dictionary
+Generator <-- Dictionary
+deactivate Dictionary
+
+loop for given number of sentences to generate
+loop while not valid
+Generator -> Dictionary: GetData
+activate Dictionary
+Generator <- Dictionary
+deactivate Dictionary
+Generator -> Generator : GenerateSentence
+Generator -> "Moderate Text Interface": CheckValidity
+activate "Moderate Text Interface"
+Generator <-- "Moderate Text Interface"
+deactivate "Moderate Text Interface"
+end
+Generator -> History: UpdateHistory
+activate History
+Generator <-- History
+deactivate History
+end
+
+Generator --> "User Interface"
+deactivate Generator
+deactivate "User Interface"
+
+"User Interface" -> History: GetHistory
+activate "User Interface"
+activate History
+"User Interface" <-- History
+deactivate History
+
+deactivate "User Interface"
+
+@enduml

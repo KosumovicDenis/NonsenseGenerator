@@ -1,0 +1,27 @@
+@startuml
+actor User
+participant System
+participant "Analyze Syntax System"
+participant "Moderate Text System"
+
+User -> System : generate random sentences
+System -> "Analyze Syntax System" : analyze given sentence
+"Analyze Syntax System" -> "System": send syntactic tree
+opt syntax tree required
+System -> User: send syntax tree
+end
+System -> System: update dictionary
+loop for given number of sentences to generate
+loop while sentence not valid
+System -> System: generate random sentence
+System -> "Moderate Text System": validate random sentence
+System <- "Moderate Text System": send validation result
+end
+System -> System: update history
+end
+User <- System : send random sentences
+
+
+User -> System : view sentence history
+User <- System : send sentence history
+@enduml

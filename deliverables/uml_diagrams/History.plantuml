@@ -1,0 +1,17 @@
+@startuml
+
+actor User
+participant Controller
+participant History
+
+
+
+User -> Controller: viewHistory()
+Controller -> History: getHistory()
+loop for every sentence
+  History -> History: get()
+end
+History --> Controller
+Controller --> User
+
+@enduml

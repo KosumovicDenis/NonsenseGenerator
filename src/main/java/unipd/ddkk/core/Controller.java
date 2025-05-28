@@ -11,7 +11,7 @@ public class Controller {
     }
 
     public GenerationResult generate(String input, boolean addToDict, int count, String selectedTemplate) {
-        return s.generatePhrases(input, addToDict, count, selectedTemplate);
+        return s.generatePhrases(input, addToDict, count, selectedTemplate, true);
     }
 
     public List<String> getAvailableTemplates() {

@@ -36,7 +36,7 @@ public class ServiceTest {
         String selectedTemplate = "";
         int expectedPhrasesNumber = 5;
         // Act
-        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate, false);
 
         int phrasesNumber = result.sentences.size();
 
@@ -53,7 +53,7 @@ public class ServiceTest {
         int count = 5;
         String selectedTemplate = "";
         // Act
-        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate, false);
 
 
         boolean isValid = true;
@@ -84,7 +84,7 @@ public class ServiceTest {
         int count = 5;
         String selectedTemplate = "";
         // Act
-        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate);
+        GenerationResult result = service.generatePhrases(input, addToDict, count, selectedTemplate, false);
         
         
         boolean isValid = true;

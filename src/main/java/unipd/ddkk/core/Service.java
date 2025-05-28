@@ -37,7 +37,7 @@ public class Service {
         return true;
     }
 
-    public GenerationResult generatePhrases(String input, boolean addToDict, int count, String selectedTemplate) {
+    public GenerationResult generatePhrases(String input, boolean addToDict, int count, String selectedTemplate, boolean updateHistory) {
         SentenceStructure treeStructure = apiCaller.getStructure(input);
 
         ArrayList<GeneratedSentence> result = new ArrayList<>();
@@ -69,7 +69,8 @@ public class Service {
             }
         }
         executor.shutdown();
-        hist.push(result);
+        if(updateHistory)
+            hist.push(result);
 
         // Restituisci insieme frasi e struttura
         return new GenerationResult(result, treeStructure);
