@@ -1,15 +1,25 @@
 @startuml
 actor User
 participant Controller
+participant SentenceTemplateGenerator as TemplateGen
 participant Service
 participant GoogleAPICaller as API
 participant SentenceGenerator as Generator
+participant Dictionary
 participant History
 participant GeneratedSentence
 participant GenerationResult
 
 User -> Controller : generate(input, addToDict, count, template)
 activate Controller
+
+alt genera template selezionato
+    Controller -> TemplateGen : generateTemplate()
+    activate TemplateGen
+    TemplateGen --> Controller : template
+    deactivate TemplateGen
+end
+
 Controller -> Service : generatePhrases(input, addToDict, count, template)
 activate Service
 
@@ -21,7 +31,30 @@ deactivate API
 loop count volte
     Service -> Generator : generatePhrase(structure, addToDict, template)
     activate Generator
-    Generator --> Service : String phrase
+
+    alt template not selected
+        Generator -> Dictionary : getRandom(SENTENCE_STRUCTURE)
+        activate Dictionary
+        Dictionary --> Generator : template
+        deactivate Dictionary
+    end
+
+    alt addToDict
+        Generator -> Dictionary : updateDictionary(input)
+        activate Dictionary
+        Dictionary --> Generator : void
+        deactivate Dictionary
+    end
+
+    Generator -> Generator : fillTemplate(template, names, verbs, adjectives, usedInputElement)
+    activate Generator
+    loop template contains placeholder
+        Generator -> Generator : replacePlaceholder()
+    end
+    Generator -> Generator : appendReplacement(result, replacement)
+    deactivate Generator
+
+    Generator --> Service : phrase
     deactivate Generator
 
     Service -> API : getModerationCategories(phrase)
@@ -69,3 +102,4 @@ deactivate Service
 Controller --> User : GenerationResult
 deactivate Controller
 @enduml
+
