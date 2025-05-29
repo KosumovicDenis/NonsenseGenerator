@@ -1,18 +1,24 @@
-# Get Started
-Welcome to **NonsenseGenerator**, a playful and creative application designed to generate quirky, unexpected sentences based on random grammatical structures. Whether you're a writer looking for prompts, a developer exploring language generation, or just someone in need of a good chuckle — this tool is for you.
+# Nonsense Generator
 
+<p align="center">
+  🌟 <a href="https://nonsensegeneratorsite.netlify.app/"><strong>Get Started</strong></a> |
+  🛠️ <a href="https://nonsensegeneratorsite.netlify.app/installation"><strong>Installation</strong></a> |
+  🧪 <a href="https://nonsensegeneratorsite.netlify.app/reports/surefire.html"><strong>Test report</strong></a> |
+  🌐 <a href="https://github.com/KosumovicDenis/NonsenseGenerator"><strong>Code</strong></a>
+</p>
+
+Welcome to **NonsenseGenerator**, a playful and creative application designed to generate quirky, unexpected sentences based on random grammatical structures. Whether you're a writer looking for prompts, a developer exploring language generation, or just someone in need of a good chuckle — this tool is for you.
 
 ![NonsenseGenerator Banner](/deliverables/img/preview.png)
 
 > *NonsenseGenerator app – Where grammar meets absurdity.*
-
 
 NonsenseGenerator takes simple text input and turns it into wild, sometimes poetic nonsense using structured templates, a randomized dictionary, and optional syntax trees. It features an easy-to-use graphical interface, a customizable wordbank, and a history of all your generated gems.
 
 Ready to dive in?
 
 
-# Installation Manual
+# Installation
 
 NonsenseGenerator is a desktop Java application built using JavaFX and Maven. This project uses **Java 21**, **JavaFX 21**.
 
@@ -164,11 +170,6 @@ mvn test
   - `atlantafx-base`
   - `junit-jupiter` for testing
 
-## License
-
-This project is licensed under the MIT License. See `LICENSE` for details.
-
-
 ## Maven-generated Website
 
 **[Website Link](https://nonsensegeneratorsite.netlify.app/site/index.html)**
@@ -180,3 +181,7 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 [Surefire Report Link](https://nonsensegeneratorsite.netlify.app/reports/surefire.html)
 
 [![Surefire Report Link](/deliverables/img/surefire-report.png)](https://nonsensegeneratorsite.netlify.app/reports/surefire.html)
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.
