@@ -50,7 +50,7 @@ cd NonsenseGenerator
 This project requires an API key to access external services. You must define the following environment variable:
 
 ```
-API_KEY=your_api_key_here
+API_KEY=key_here
 ```
 
 To configure it:
@@ -60,7 +60,7 @@ To configure it:
    cp .env.example .env
    ```
 
-2. Open `.env` and replace `your_api_key_here` with your actual key.
+2. Open `.env` and replace `key_here` with your actual key.
 
 ## Build the Project
 
